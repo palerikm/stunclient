@@ -575,8 +575,8 @@ main(int   argc,
     TransactionAttributes transAttr;
     stunlib_createId(&transAttr.transactionId);
     transAttr.sockhandle = listenConfig.socketConfig[i].sockfd;
-    strncpy( transAttr.username, username, strlen(username) );
-    strncpy( transAttr.password, password, strlen(password) );
+    strncpy( transAttr.username, username, strlen(transAttr.username) );
+    strncpy( transAttr.password, password, strlen(transAttr.password) );
     transAttr.peerPriority                    = 34567;
     transAttr.useCandidate                    = false;
     transAttr.iceControlling                  = false;
