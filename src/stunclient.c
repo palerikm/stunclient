@@ -40,16 +40,15 @@
 
 /* int                        sockfd; */
 static struct listenConfig listenConfig;
-struct timeval             start;
-struct timeval             stop;
-int                        numresp;
-pthread_mutex_t            mutex;
+
+int             numresp;
+pthread_mutex_t mutex;
 
 char username[] = "evtj:h6vY\0";
 char password[] = "VOkJxbRl1RmTxUk/WvJxBt\0";
 
 #define max_iface_len 10
-
+#define MAX_TRANSACTIONS 60
 
 struct client_config {
   char                    interface[10];
@@ -62,32 +61,33 @@ struct client_config {
 };
 static struct client_config config;
 
-struct stunTransSummary {
-  int32_t  numTransactions;
-  int32_t  numFailedTransactions;
-  int32_t  maxRTT;
-  int32_t  minRTT;
-  int32_t  sumRTT;
-  int32_t  numRetrans;
-  int32_t  numClientSent;
-  int32_t  numServSent;
-  uint16_t startPort;
-  uint16_t stopPort;
+struct stunTransInfo {
+  StunMsgId               transactionId;
+  struct timeval          start;
+  struct timeval          stop;
+  struct sockaddr_storage clientAddr;
+  struct sockaddr_storage serverAddr;
+  struct sockaddr_storage rflxAddr;
+
+  int32_t rtt;
+  int32_t numRetrans;
+  int32_t numClientSent;
+  int32_t numServSent;
 };
 
-static struct stunTransSummary stunTransSummary;
+static struct stunTransInfo stunTransSummary[MAX_TRANSACTIONS];
 
 static void
 initSummary()
 {
-  stunTransSummary.numTransactions       = 0;
-  stunTransSummary.numFailedTransactions = 0;
-  stunTransSummary.maxRTT                = 0;
-  stunTransSummary.minRTT                = 0;
-  stunTransSummary.sumRTT                = 0;
-  stunTransSummary.numRetrans            = 0;
-  stunTransSummary.numClientSent         = 0;
-  stunTransSummary.numServSent           = 0;
+  for (int i = 0; i < MAX_TRANSACTIONS; i++)
+  {
+    memset( &stunTransSummary[i].transactionId, 0, sizeof(StunMsgId) );
+    stunTransSummary[i].rtt           = 0;
+    stunTransSummary[i].numRetrans    = 0;
+    stunTransSummary[i].numClientSent = 0;
+    stunTransSummary[i].numServSent   = 0;
+  }
 }
 
 static void
@@ -96,63 +96,76 @@ printCSV(/* arguments */)
   time_t     nowtime;
   struct tm* nowtm;
   char       tmbuf[64], buf[64];
-
-  /* gettimeofday(&tv, NULL); */
-  nowtime = start.tv_sec;
-  nowtm   = localtime(&nowtime);
-  strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
+  char       addr_str[SOCKADDR_MAX_STRLEN];
+  for (int i = 0; i < numresp; i++)
+  {
+    /* gettimeofday(&tv, NULL); */
+    nowtime = stunTransSummary[i].start.tv_sec;
+    nowtm   = localtime(&nowtime);
+    strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
   #ifdef __APPLE__
-  snprintf(buf, sizeof buf, "%s.%06d",  tmbuf, start.tv_usec);
+    snprintf(buf,
+             sizeof buf,
+             "%s.%06d",
+             tmbuf,
+             stunTransSummary[i].start.tv_usec);
   #else
-  snprintf(buf, sizeof buf, "%s.%06ld", tmbuf, start.tv_usec);
+    snprintf(buf,
+             sizeof buf,
+             "%s.%06ld",
+             tmbuf,
+             stunTransSumary[i].start.tv_usec);
   #endif
 
-  printf("%s, ", buf);
+    printf("%s, ", buf);
 
-  nowtime = stop.tv_sec;
-  nowtm   = localtime(&nowtime);
-  strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
+    nowtime = stunTransSummary[i].stop.tv_sec;
+    nowtm   = localtime(&nowtime);
+    strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
   #ifdef __APPLE__
-  snprintf(buf, sizeof buf, "%s.%06d",  tmbuf, stop.tv_usec);
+    snprintf(buf, sizeof buf, "%s.%06d",  tmbuf,
+             stunTransSummary[i].stop.tv_usec);
   #else
-  snprintf(buf, sizeof buf, "%s.%06ld", tmbuf, stop.tv_usec);
+    snprintf(buf, sizeof buf, "%s.%06ld", tmbuf,
+             stunTransSumary[i].stop.tv_usec);
   #endif
-  printf("%s, ", buf);
+    printf("%s, ", buf);
 
-  printf("%i, %i, %i, %i, %i, %i, %i, %i, %i, %i\n",
-         stunTransSummary.numTransactions,
-         stunTransSummary.numFailedTransactions,
-         stunTransSummary.maxRTT,
-         stunTransSummary.minRTT,
-         stunTransSummary.sumRTT / stunTransSummary.numTransactions,
-         stunTransSummary.numRetrans,
-         stunTransSummary.numClientSent,
-         stunTransSummary.numServSent,
-         stunTransSummary.startPort,
-         stunTransSummary.stopPort
-         );
+    stun_printTransId(stdout,
+                      &stunTransSummary[i].transactionId);
 
+    sockaddr_toString( (struct sockaddr*)&stunTransSummary[i].serverAddr,
+                       addr_str,
+                       sizeof(addr_str),
+                       true );
+    printf(", %s", addr_str);
+    sockaddr_toString( (struct sockaddr*)&stunTransSummary[i].clientAddr,
+                       addr_str,
+                       sizeof(addr_str),
+                       true );
+    printf(", %s", addr_str);
+
+
+    sockaddr_toString( (struct sockaddr*)&stunTransSummary[i].rflxAddr,
+                       addr_str,
+                       sizeof(addr_str),
+                       true );
+    printf(", %s", addr_str);
+
+    printf(", %i, %i, %i, %i\n",
+           stunTransSummary[i].rtt,
+           stunTransSummary[i].numRetrans,
+           stunTransSummary[i].numClientSent,
+           stunTransSummary[i].numServSent
+
+           );
+  }
 }
 
 static void
 printSummary(/* arguments */)
 {
-  printf(
-    "  Num Trans  Failed      Max RTT  Min RTT  Avg RTT  Retrans    Client  Server  Port Range\n");
-  printf(
-    "     %i        %i    %i    %i    %i      %i         %i      %i  %i-%i\n",
-    stunTransSummary.numTransactions,
-    stunTransSummary.numFailedTransactions,
-    stunTransSummary.maxRTT,
-    stunTransSummary.minRTT,
-    stunTransSummary.sumRTT / stunTransSummary.numTransactions,
-    stunTransSummary.numRetrans,
-    stunTransSummary.numClientSent,
-    stunTransSummary.numServSent,
-    stunTransSummary.startPort,
-    stunTransSummary.stopPort
-    );
-
+  printf("TODO:\n");
 }
 
 static void
@@ -166,20 +179,6 @@ teardown()
   exit(0);
 }
 
-
-void
-printTimeSpent()
-{
-  int time;
-
-
-  time =
-    (stop.tv_sec * 1000000 +
-     stop.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec);
-
-  printf("User: %i.%ims\n", time / 1000, time % 1000);
-}
-
 void
 handleStunResp(const StunMsgId*       msgId,
                const struct sockaddr* serverAddr,
@@ -190,6 +189,25 @@ handleStunResp(const StunMsgId*       msgId,
                const int              resp)
 {
   char addr_str[SOCKADDR_MAX_STRLEN];
+
+  /* Fill in the rigth stuninfo struct.. */
+  for (int i = 0; i < config.jobs; i++)
+  {
+    if ( stunlib_transIdIsEqual(msgId, &stunTransSummary[i].transactionId) )
+    {
+      gettimeofday(&stunTransSummary[i].stop, NULL);
+      sockaddr_copy( (struct sockaddr*)&stunTransSummary[i].serverAddr,
+                     serverAddr );
+      sockaddr_copy( (struct sockaddr*)&stunTransSummary[i].rflxAddr,
+                     rflxAddr );
+      stunTransSummary[i].rtt           = rtt;
+      stunTransSummary[i].numRetrans    = retrans;
+      stunTransSummary[i].numClientSent = req;
+      stunTransSummary[i].numServSent   = resp;
+    }
+
+  }
+
   if (!config.csv_output)
   {
     printf("----------- Start: %i -----------------\n", numresp);
@@ -215,30 +233,6 @@ handleStunResp(const StunMsgId*       msgId,
     printf("Responses sent by server: %i\n",            resp);
     printf("------------ End: %i ------------------\n", numresp);
   }
-  stunTransSummary.numTransactions++;
-  if (stunTransSummary.maxRTT < rtt)
-  {
-    stunTransSummary.maxRTT = rtt;
-  }
-  if ( (stunTransSummary.minRTT > rtt) || (stunTransSummary.minRTT == 0) )
-  {
-    stunTransSummary.minRTT = rtt;
-  }
-  stunTransSummary.sumRTT        += rtt;
-  stunTransSummary.numRetrans    += retrans;
-  stunTransSummary.numClientSent += req;
-  stunTransSummary.numServSent   += resp;
-  uint16_t port = sockaddr_ipPort(rflxAddr);
-  if ( (stunTransSummary.startPort > port) ||
-       (stunTransSummary.startPort == 0) )
-  {
-    stunTransSummary.startPort = port;
-  }
-  if (stunTransSummary.stopPort < port)
-  {
-    stunTransSummary.stopPort = port;
-  }
-
 }
 
 void
@@ -248,6 +242,7 @@ StunCallBack(void*               userCtx,
   (void)userCtx;
   (void)data;
 
+  numresp++;
   switch (data->stunResult)
   {
   case StunResult_BindOk:
@@ -263,8 +258,23 @@ StunCallBack(void*               userCtx,
     printf("Got ICMP response (Should check if it is host unreachable?)\n");
     break;
   case StunResult_BindFailNoAnswer:
-    stunTransSummary.numTransactions++;
-    stunTransSummary.numFailedTransactions++;
+    for (int i = 0; i < config.jobs; i++)
+    {
+      if ( stunlib_transIdIsEqual(&data->msgId,
+                                  &stunTransSummary[i].transactionId) )
+      {
+        sockaddr_copy( (struct sockaddr*)&stunTransSummary[i].serverAddr,
+                       (struct sockaddr*)&data->srcAddr );
+        sockaddr_reset(&stunTransSummary[i].rflxAddr);
+        stunTransSummary[i].rtt           = 0;
+        stunTransSummary[i].numRetrans    = data->retransmits;
+        stunTransSummary[i].numClientSent = 0;
+        stunTransSummary[i].numServSent   = 0;
+        gettimeofday(&stunTransSummary[i].stop, NULL);
+      }
+
+    }
+
     if (!config.csv_output)
     {
       printf("No answer from stunserver\n");
@@ -274,11 +284,10 @@ StunCallBack(void*               userCtx,
     printf("Unhandled..\n");
 
   }
-  numresp++;
+
 
   if (numresp >= listenConfig.numSockets)
   {
-    gettimeofday(&stop, NULL);
     /* Todo: Check what transactions and so on we are missing.. */
     if (config.csv_output)
     {
@@ -287,7 +296,6 @@ StunCallBack(void*               userCtx,
     else
     {
       printSummary();
-      printTimeSpent();
     }
     teardown();
   }
@@ -441,6 +449,10 @@ configure(struct client_config* config,
       break;
     case 'j':
       config->jobs = atoi(optarg);
+      if (config->jobs > MAX_TRANSACTIONS)
+      {
+        config->jobs = MAX_TRANSACTIONS;
+      }
       break;
     case '2':
       config->csv_output = true;
@@ -517,10 +529,7 @@ main(int   argc,
   /* Initialise the random seed. */
   /* srand( time(&t) ); */
 
-
   initSummary();
-
-  gettimeofday(&start, NULL);
 
   /* Read cmd line argumens and set it up */
   configure(&config,argc,argv);
@@ -576,6 +585,20 @@ main(int   argc,
     transAttr.enfFlowDescription.type         = 0x04;
     transAttr.enfFlowDescription.bandwidthMax = 4096;
 
+    /* Fill in transaction ifo struct so we can compare when we get responses */
+    memcpy( &stunTransSummary[i].transactionId,
+            &transAttr.transactionId, sizeof(StunMsgId) );
+
+    struct sockaddr_storage addr;
+    socklen_t               len = sizeof addr;
+    getsockname(listenConfig.socketConfig[i].sockfd,
+                (struct sockaddr*)&addr,
+                &len);
+    sockaddr_copy( (struct sockaddr*)&stunTransSummary[i].clientAddr,
+                   (struct sockaddr*)&addr );
+
+
+    gettimeofday(&stunTransSummary[i].start, NULL);
     StunClient_startBindTransaction(clientData,
                                     &config,
                                     (const struct sockaddr*)&config.remoteAddr,

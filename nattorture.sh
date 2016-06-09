@@ -42,11 +42,10 @@ ip=$@
 echo "interface=$interface, output_file='$output_file',runs='$runs', ip: $ip"
 
 rm output_file
-printf "Name, run, Start, stop, transactions, failed, max rtt, min rtt, avg rtt, retries, client sent, server sent, start port, stop port\n" > $output_file
+printf "Start, Stop, transaction ID, failed, Server Addr, Client Addr, RFLX Addr, RTT (micro sec), retries, client sent, server sent\n" > $output_file
 for (( i=1; i<=$runs; i++ ))
 do
   echo "Run $i"
-  printf "$test_name, $i, " >> $output_file
  build/dist/bin/stunclient -i $interface $ip -j 60 --csv >> $output_file
 done
 
