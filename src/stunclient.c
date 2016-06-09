@@ -114,7 +114,7 @@ printCSV(/* arguments */)
              sizeof buf,
              "%s.%06ld",
              tmbuf,
-             stunTransSumary[i].start.tv_usec);
+             stunTransSummary[i].start.tv_usec);
   #endif
 
     printf("%s, ", buf);
@@ -127,7 +127,7 @@ printCSV(/* arguments */)
              stunTransSummary[i].stop.tv_usec);
   #else
     snprintf(buf, sizeof buf, "%s.%06ld", tmbuf,
-             stunTransSumary[i].stop.tv_usec);
+             stunTransSummary[i].stop.tv_usec);
   #endif
     printf("%s, ", buf);
 
