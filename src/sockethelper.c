@@ -96,6 +96,7 @@ createLocalSocket(int                    ai_family,
     }
     break;
   }
+
   return sockfd;
 }
 

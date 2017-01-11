@@ -117,7 +117,7 @@ printCSV(/* arguments */)
              stunTransSummary[i].start.tv_usec);
   #endif
 
-    printf("%s, ", buf);
+    printf("%s,", buf);
 
     nowtime = stunTransSummary[i].stop.tv_sec;
     nowtm   = localtime(&nowtime);
@@ -129,7 +129,7 @@ printCSV(/* arguments */)
     snprintf(buf, sizeof buf, "%s.%06ld", tmbuf,
              stunTransSummary[i].stop.tv_usec);
   #endif
-    printf("%s, ", buf);
+    printf("%s,", buf);
 
     stun_printTransId(stdout,
                       &stunTransSummary[i].transactionId);
@@ -138,26 +138,25 @@ printCSV(/* arguments */)
                        addr_str,
                        sizeof(addr_str),
                        true );
-    printf(", %s", addr_str);
+    printf(",%s", addr_str);
     sockaddr_toString( (struct sockaddr*)&stunTransSummary[i].clientAddr,
                        addr_str,
                        sizeof(addr_str),
                        true );
-    printf(", %s", addr_str);
+    printf(",%s", addr_str);
 
 
     sockaddr_toString( (struct sockaddr*)&stunTransSummary[i].rflxAddr,
                        addr_str,
                        sizeof(addr_str),
                        true );
-    printf(", %s", addr_str);
+    printf(",%s", addr_str);
 
-    printf(", %i, %i, %i, %i\n",
+    printf(",%i,%i,%i,%i\n",
            stunTransSummary[i].rtt,
            stunTransSummary[i].numRetrans,
            stunTransSummary[i].numClientSent,
            stunTransSummary[i].numServSent
-
            );
   }
 }
@@ -575,15 +574,15 @@ main(int   argc,
     TransactionAttributes transAttr;
     stunlib_createId(&transAttr.transactionId);
     transAttr.sockhandle = listenConfig.socketConfig[i].sockfd;
-    strncpy( transAttr.username, username, STUN_MSG_MAX_USERNAME_LENGTH );
-    strncpy( transAttr.password, password, STUN_MSG_MAX_PASSWORD_LENGTH );
-    transAttr.peerPriority                    = 34567;
-    transAttr.useCandidate                    = false;
-    transAttr.iceControlling                  = false;
-    transAttr.tieBreaker                      = 4567;
-    transAttr.addEnf                          = true;
-    transAttr.enfFlowDescription.type         = 0x04;
-    transAttr.enfFlowDescription.bandwidthMax = 4096;
+    //strncpy( transAttr.username, username, STUN_MSG_MAX_USERNAME_LENGTH );
+    //strncpy( transAttr.password, password, STUN_MSG_MAX_PASSWORD_LENGTH );
+    //transAttr.peerPriority                    = 34567;
+    //transAttr.useCandidate                    = false;
+    //transAttr.iceControlling                  = false;
+    //transAttr.tieBreaker                      = 4567;
+    //transAttr.addEnf                          = true;
+    //transAttr.enfFlowDescription.type         = 0x04;
+    //transAttr.enfFlowDescription.bandwidthMax = 4096;
 
     /* Fill in transaction ifo struct so we can compare when we get responses */
     memcpy( &stunTransSummary[i].transactionId,
