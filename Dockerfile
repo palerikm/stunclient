@@ -22,7 +22,4 @@ RUN \
 
 WORKDIR stunclient
 RUN pwd
-#CMD ["/bin/bash", "ls -a"]
-#CMD stunclient/serverping.sh
-ENTRYPOINT ["./serverping.sh"]
-CMD ["-i eth0" "-f test.json" "-r 2" "-p http://ec2-35-166-234-254.us-west-2.compute.amazonaws.com/discovery-result"]
+CMD ["/bin/bash", "-c", "while true; do ./serverping.sh; sleep 600; done"]
