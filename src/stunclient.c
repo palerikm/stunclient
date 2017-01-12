@@ -572,6 +572,7 @@ main(int   argc,
   for (int i = 0; i < listenConfig.numSockets; i++)
   {
     TransactionAttributes transAttr;
+    memset(&transAttr, 0, sizeof transAttr);
     stunlib_createId(&transAttr.transactionId);
     transAttr.sockhandle = listenConfig.socketConfig[i].sockfd;
     //strncpy( transAttr.username, username, STUN_MSG_MAX_USERNAME_LENGTH );
