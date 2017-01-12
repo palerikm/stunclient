@@ -101,7 +101,7 @@ printCSV(/* arguments */)
   {
     /* gettimeofday(&tv, NULL); */
     nowtime = stunTransSummary[i].start.tv_sec;
-    nowtm   = localtime(&nowtime);
+    nowtm   = gmtime(&nowtime);
     strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
   #ifdef __APPLE__
     snprintf(buf,
@@ -120,7 +120,7 @@ printCSV(/* arguments */)
     printf("%s,", buf);
 
     nowtime = stunTransSummary[i].stop.tv_sec;
-    nowtm   = localtime(&nowtime);
+    nowtm   = gmtime(&nowtime);
     strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
   #ifdef __APPLE__
     snprintf(buf, sizeof buf, "%s.%06d",  tmbuf,
