@@ -263,7 +263,7 @@ StunCallBack(void*               userCtx,
                                   &stunTransSummary[i].transactionId) )
       {
         sockaddr_copy( (struct sockaddr*)&stunTransSummary[i].serverAddr,
-                       (struct sockaddr*)&data->srcAddr );
+                       (struct sockaddr*)&config.remoteAddr );
         sockaddr_reset(&stunTransSummary[i].rflxAddr);
         stunTransSummary[i].rtt           = 0;
         stunTransSummary[i].numRetrans    = data->retransmits;
