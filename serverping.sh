@@ -6,7 +6,7 @@ filename=server_list.conf
 
 interface="eth0"
 ip=""
-runs=10
+runs=2
 output_file="out.json"
 test_name="test"
 
@@ -50,7 +50,7 @@ do
   for (( i=1; i<=$runs; i++ ))
   do
    echo "  Run $i"
-   build/dist/bin/stunclient -i $interface $ip -p $port -j 60 --csv >> $tmp_csv
+   build/dist/bin/stunclient -i $interface $ip -p $port -j 5 --csv >> $tmp_csv
   done
   #./nattorture.sh -i en7 -r 2 -f tmp.csv -p $port $ip
   #cat tmp.csv >> $output_file
