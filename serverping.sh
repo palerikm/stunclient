@@ -4,15 +4,17 @@ output_file="out.csv"
 
 filename=server_list.conf
 
-interface="default"
+interface="eth0"
 ip=""
 runs=2
 output_file="out.json"
 test_name="test"
 
 tmp_csv="tmp.csv"
-post_server="http://ec2-35-166-234-254.us-west-2.compute.amazonaws.com/discovery-result"
-server_list="http://ec2-35-166-234-254.us-west-2.compute.amazonaws.com/discovery-config.json"
+
+post_server=$POST_SERVER
+server_list=$SERVER_LIST
+
 while getopts "h?i:f:r:o:t:p:" opt; do
     case "$opt" in
     h|\?)
@@ -65,3 +67,5 @@ csv2json $tmp_csv $output_file
 
 echo "Posting to $post_server"
 curl -H "Content-Type: application/json" -X POST --data @$output_file $post_server
+echo "Done"
+echo "Waiting for next run!"

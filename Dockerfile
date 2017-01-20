@@ -13,7 +13,6 @@ RUN \
  rm -rf /var/lib/apt/lists/* &&\
  npm install --global csv2json &&\
  cd stunclient &&\
- git tag v0.0.1 &&\
  rm -rf build &&\
  ./build.sh &&\
  make -C build install &&\
