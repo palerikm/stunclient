@@ -160,7 +160,7 @@ getRemoteIpAddr(struct sockaddr* remoteAddr,
 
   if ( ( status = getaddrinfo(fqdn, NULL, &hints, &res) ) != 0 )
   {
-    fprintf( stderr, "getaddrinfo: %s\n", gai_strerror(status) );
+    //fprintf( stderr, "getaddrinfo: %s\n", gai_strerror(status) );
     return 2;
   }
 

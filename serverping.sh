@@ -4,7 +4,7 @@ output_file="out.csv"
 
 filename=server_list.conf
 
-interface="eth0"
+interface="default"
 ip=""
 runs=2
 output_file="out.json"
@@ -49,8 +49,13 @@ do
   echo "Pinging $ip at $port"
   for (( i=1; i<=$runs; i++ ))
   do
-   echo "  Run $i"
-   build/dist/bin/stunclient -i $interface $ip -p $port -j 5 --csv >> $tmp_csv
+   printf "  Run $i ($interface, $ip, $port)"
+   build/dist/bin/stunclient -q -i $interface $ip -p $port -j 5 --csv >> $tmp_csv
+   if [ $? -ne 0 ] ; then
+      printf " failure\n"
+    else
+      printf " success\n"
+    fi
   done
   #./nattorture.sh -i en7 -r 2 -f tmp.csv -p $port $ip
   #cat tmp.csv >> $output_file

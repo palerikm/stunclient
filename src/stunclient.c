@@ -57,6 +57,7 @@ struct client_config {
   int                     port;
   int                     jobs;
   bool                    debug;
+  bool                    quiet;
   bool                    csv_output;
 };
 static struct client_config config;
@@ -254,7 +255,10 @@ StunCallBack(void*               userCtx,
                    data->respTransCnt);
     break;
   case StunResult_ICMPResp:
-    printf("Got ICMP response (Should check if it is host unreachable?)\n");
+    if (config.quiet == false)
+    {
+      printf("Got ICMP response (Should check if it is host unreachable?)\n");
+    }
     break;
   case StunResult_BindFailNoAnswer:
     for (int i = 0; i < config.jobs; i++)
@@ -280,8 +284,10 @@ StunCallBack(void*               userCtx,
     }
     break;
   default:
-    printf("Unhandled..\n");
-
+    if (config.quiet == false)
+    {
+      printf("Unhandled..\n");
+    }
   }
 
 
@@ -396,6 +402,7 @@ printUsage()
     "  -j <num>, --jobs <num>    Run <num> transactions in paralell(almost)\n");
   printf("  --post <ip>               Send results to server\n");
   printf("  -v, --version             Print version number\n");
+  printf("  -q, --quiet               Suppress error output\n");
   printf("  -h, --help                Print help text\n");
   exit(0);
 }
@@ -413,6 +420,7 @@ configure(struct client_config* config,
   config->port  = 3478;
   config->jobs  = 1;
   config->debug = false;
+  config->quiet = false;
 
 
   static struct option long_options[] = {
@@ -422,6 +430,7 @@ configure(struct client_config* config,
     {"debug", 0, 0, 'd'},
     {"csv", 0, 0, '2'},
     {"help", 0, 0, 'h'},
+    {"quiet", 0, 0, 'q'},
     {"version", 0, 0, 'v'},
     {NULL, 0, NULL, 0}
   };
@@ -431,7 +440,7 @@ configure(struct client_config* config,
     exit(0);
   }
   int option_index = 0;
-  while ( ( c = getopt_long(argc, argv, "hvdi:p:j:o:",
+  while ( ( c = getopt_long(argc, argv, "hvdqi:p:j:o:",
                             long_options, &option_index) ) != -1 )
   {
     /* int this_option_optind = optind ? optind : 1; */
@@ -459,6 +468,9 @@ configure(struct client_config* config,
     case 'h':
       printUsage();
       break;
+    case 'q':
+      config->quiet = true;
+      break;
     case 'v':
       printf("Version %s\n", VERSION_SHORT);
       exit(0);
@@ -473,7 +485,10 @@ configure(struct client_config* config,
                            argv[optind++],
                            config->port ) )
     {
-      printf("Error getting remote IPaddr");
+      if (config->quiet == false)
+      {
+        printf("Error getting remote IPaddr");
+      }
       exit(1);
     }
   }
@@ -485,7 +500,10 @@ configure(struct client_config* config,
                                 IPv6_ADDR_NORMAL,
                                 false ) )
   {
-    printf("Error getting IPaddr on %s\n", config->interface);
+    if (config->quiet == false)
+    {
+      printf("Error getting IPaddr on %s\n", config->interface);
+    }
     exit(1);
   }
 
@@ -575,15 +593,15 @@ main(int   argc,
     memset(&transAttr, 0, sizeof transAttr);
     stunlib_createId(&transAttr.transactionId);
     transAttr.sockhandle = listenConfig.socketConfig[i].sockfd;
-    //strncpy( transAttr.username, username, STUN_MSG_MAX_USERNAME_LENGTH );
-    //strncpy( transAttr.password, password, STUN_MSG_MAX_PASSWORD_LENGTH );
-    //transAttr.peerPriority                    = 34567;
-    //transAttr.useCandidate                    = false;
-    //transAttr.iceControlling                  = false;
-    //transAttr.tieBreaker                      = 4567;
-    //transAttr.addEnf                          = true;
-    //transAttr.enfFlowDescription.type         = 0x04;
-    //transAttr.enfFlowDescription.bandwidthMax = 4096;
+    /* strncpy( transAttr.username, username, STUN_MSG_MAX_USERNAME_LENGTH ); */
+    /* strncpy( transAttr.password, password, STUN_MSG_MAX_PASSWORD_LENGTH ); */
+    /* transAttr.peerPriority                    = 34567; */
+    /* transAttr.useCandidate                    = false; */
+    /* transAttr.iceControlling                  = false; */
+    /* transAttr.tieBreaker                      = 4567; */
+    /* transAttr.addEnf                          = true; */
+    /* transAttr.enfFlowDescription.type         = 0x04; */
+    /* transAttr.enfFlowDescription.bandwidthMax = 4096; */
 
     /* Fill in transaction ifo struct so we can compare when we get responses */
     memcpy( &stunTransSummary[i].transactionId,
