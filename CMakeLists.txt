@@ -6,13 +6,18 @@
 cmake_minimum_required ( VERSION 3.2.0 )
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 include ( Uncrustify )
-include ( GetGitRevisionDescription )
-git_describe(VERSION --tags --dirty=-d)
+#include ( GetGitRevisionDescription )
+#git_describe(VERSION --tags --dirty=-d)
 
-string(REGEX REPLACE "^v([0-9]+)\\..*" "\\1" STUNCLIENT_VERSION_MAJOR "${VERSION}")
-string(REGEX REPLACE "^v[0-9]+\\.([0-9]+).*" "\\1" STUNCLIENT_VERSION_MINOR "${VERSION}")
-string(REGEX REPLACE "^v[0-9]+\\.[0-9]+\\.([0-9]+).*" "\\1" STUNCLIENT_VERSION_PATCH "${VERSION}")
-string(REGEX REPLACE "^v[0-9]+\\.[0-9]+\\.[0-9]+(.*)" "\\1" STUNCLIENT_VERSION_SHA1 "${VERSION}")
+#string(REGEX REPLACE "^v([0-9]+)\\..*" "\\1" STUNCLIENT_VERSION_MAJOR "${VERSION}")
+#string(REGEX REPLACE "^v[0-9]+\\.([0-9]+).*" "\\1" STUNCLIENT_VERSION_MINOR "${VERSION}")
+#string(REGEX REPLACE "^v[0-9]+\\.[0-9]+\\.([0-9]+).*" "\\1" STUNCLIENT_VERSION_PATCH "${VERSION}")
+#string(REGEX REPLACE "^v[0-9]+\\.[0-9]+\\.[0-9]+(.*)" "\\1" STUNCLIENT_VERSION_SHA1 "${VERSION}")
+
+set(STUNCLIENT_VERSION_MAJOR 0)
+set(STUNCLIENT_VERSION_MINOR 0)
+set(STUNCLIENT_VERSION_PATCH 2)
+
 mark_as_advanced(STUNCLIENT_VERSION_MAJOR STUNCLIENT_VERSION_MINOR STUNCLIENT_VERSION_PATCH)
 
 set ( STUNCLIENT_VERSION "${STUNCLIENT_VERSION_MAJOR}.${STUNCLIENT_VERSION_MINOR}.${STUNCLIENT_VERSION_PATCH}" )
